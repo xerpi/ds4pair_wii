@@ -5,7 +5,15 @@
 #include <fat.h>
 #include <wiiuse/wpad.h>
 #include "utils.h"
-#include "ds4wiibt_config.h"
+
+/*
+config header:
+	offset  |  size  |  value
+	   0    |   4    |  number of paired devices
+	   4    |   6    |  BT MAC of the 1st device
+	  4+6*i |   6    |  BT MAC of the i-th device
+*/
+static const char conf_file[] ATTRIBUTE_ALIGN(32) = "/shared2/sys/ds4wiibt.dat";
 
 int run = 1;
 static int bd_addr_read = 0;
@@ -60,38 +68,20 @@ void find_and_set_mac()
 			print_mac(bdaddr.addr);
 			printf("\n");
 			
-			unsigned char paired[6] = {0}, ds4_mac[6] = {0};
+			unsigned char paired[6] = {0},
+				ds4_mac[6] ATTRIBUTE_ALIGN(32) = {0};
 			get_bdaddrs(fd, paired, ds4_mac);
-
-			//Write MAC to config
-			struct ds4wiibt_config_ctx conf;
-			ds4wiibt_config_initialize(&conf);
-			if (ds4wiibt_config_read(DS4WIIBT_CONFIG_FILE, &conf)) {
-				printf("Opened config file\n");
-				if (!ds4wiibt_config_MAC_exists(&conf, ds4_mac)) {
-					printf("MAC doesnt exist, adding it\n");
-					ds4wiibt_config_add(&conf, ds4_mac);
-					ds4wiibt_config_write(DS4WIIBT_CONFIG_FILE, &conf);
-				} else {
-					printf("MAC already exists\n");
-				}
-				ds4wiibt_config_free(&conf);
-			} else {
-				printf("Creating config file... ");
-				ds4wiibt_config_add(&conf, ds4_mac);
-				if (ds4wiibt_config_write(DS4WIIBT_CONFIG_FILE, &conf) > 0) {
-					printf("Done!\n");
-					ds4wiibt_config_free(&conf);
-				} else {
-					printf("Error.\n");
-				}
-			}
-			
 			printf("Controller's bluetooth MAC address: ");
 			print_mac(ds4_mac);
 			printf("\n");
 			printf("\nCurrent controller paired address: ");
 			print_mac(paired);
+			printf("\n");
+			
+			//Write the MAC to the NAND
+			if (config_add_mac(ds4_mac)) {
+				printf("DS4 MAC added to the config file!\n");
+			}
 
 			struct bd_addr bd2;
 			memcpy(bd2.addr, paired, sizeof(uint8_t) * 6);
@@ -120,6 +110,30 @@ void find_and_set_mac()
 		}
 	}
 	printf("No controller found on USB busses.\n");
+}
+
+//Deletes the config file and adds this mac
+int config_add_mac(const uint8_t *mac)
+{
+	ISFS_Initialize();
+	int fd = ISFS_Open(conf_file, ISFS_OPEN_RW);
+	if (fd >= 0) {
+		ISFS_Close(fd);
+		ISFS_Delete(conf_file);
+	}
+	printf("Creating config file... ");
+	int ret = ISFS_CreateFile(conf_file, 0, ISFS_OPEN_RW, ISFS_OPEN_RW, ISFS_OPEN_RW);
+	if (ret < 0) {
+		printf("Error creating \"%s\" : %d\n", conf_file, ret);
+		return -1;
+	}
+	printf("done!\n");
+	fd = ISFS_Open(conf_file, ISFS_OPEN_RW);
+	ISFS_Seek(fd, 0, SEEK_SET);
+	int n = ISFS_Write(fd, mac, 6);
+	ISFS_Close(fd);
+	ISFS_Deinitialize();
+	return (n == 6);
 }
 
 int set_paired_mac(int fd, unsigned char *mac)

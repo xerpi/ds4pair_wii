@@ -17,6 +17,7 @@ int bte_read_bdaddr_cb(s32 result, void *userdata);
 struct bd_addr bdaddr;
 
 void find_and_set_mac();
+int config_add_mac(const uint8_t *mac);
 int get_bdaddrs(int fd, unsigned char *paired_mac, unsigned char *ds4_mac);
 int set_paired_mac(int fd, unsigned char *mac);
 int get_link_key(int fd, unsigned char *link_key);

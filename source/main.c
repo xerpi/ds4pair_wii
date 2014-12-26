@@ -7,7 +7,6 @@
 #include <bte/bte.h>
 #include <bte/bd_addr.h>
 #include <fat.h>
-#include "ds4wiibt_config.h"
 #include "utils.h"
 
 int main(int argc, char **argv)
