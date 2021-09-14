@@ -38,7 +38,9 @@ void init_stuff()
 
 void find_and_set_mac()
 {
+	struct bd_addr bdaddr;
 	bd_addr_read = 0;
+
 	BTE_ReadBdAddr(&bdaddr, bte_read_bdaddr_cb);
 	
 	//Wait until we get the callback...

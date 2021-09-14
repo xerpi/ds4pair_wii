@@ -14,7 +14,6 @@ void init_video();
 void print_bd_addr(struct bd_addr *bdaddr);
 void print_mac(uint8_t *mac);
 int bte_read_bdaddr_cb(s32 result, void *userdata);
-struct bd_addr bdaddr;
 
 void find_and_set_mac();
 int config_add_mac(const uint8_t *mac);
