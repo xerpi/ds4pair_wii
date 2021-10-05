@@ -58,11 +58,11 @@ void find_and_set_mac()
 	for (i = 0; i < dev_count; ++i) {
 		de = &dev_entry[i];
 		
-		if( de->vid == VID && de->pid == PID) {
+		if (de->vid == SONY_VID && ((de->pid == DS4_PID) || (de->pid == DS4_2_PID))) {
 			printf("DS4 found.\n");
 			
 			int fd;
-			if (USB_OpenDevice(de->device_id, VID, PID, &fd) < 0) {
+			if (USB_OpenDevice(de->device_id, de->vid, de->pid, &fd) < 0) {
 				printf("Could not open the DS4.\n"); return;
 			}
 		

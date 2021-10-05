@@ -1,8 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define VID 0x054C
-#define PID 0x05C4
+#define SONY_VID  0x054c
+#define DS4_PID   0x05c4
+#define DS4_2_PID 0x09cc
 
 #include <gccore.h>
 #include <bte/bte.h>
